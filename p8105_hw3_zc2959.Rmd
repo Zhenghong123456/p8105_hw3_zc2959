@@ -37,11 +37,12 @@ ny_noaa_clean =
   separate(
     date,
     into = c("year", "month", "day"),
-    sep = "-",
-    remove = FALSE,
-    convert = TRUE
+    sep = "-"
   ) |>
   mutate(
+    year = as.numeric(year),
+    month = as.numeric(month),
+    day = as.numeric(day),
     tmax = as.numeric(tmax) / 10,
     tmin = as.numeric(tmin) / 10,
     prcp = prcp / 10,
@@ -52,7 +53,8 @@ ny_noaa_clean =
 
 ```{r include=FALSE}
 ny_noaa_clean |>
-  count(snow, sort = TRUE) |>
+  count(snow, name = "n_obs") |>
+  arrange(-n_obs) |>
   head(10)
 ```
 
@@ -71,16 +73,16 @@ monthly_tmax_df =
   group_by(id, year, month) |>
   summarize(
     mean_tmax = mean(tmax),
-    n_days = n(),
-    .groups = "drop"
+    n_days = n()
   ) |>
+  ungroup() |>
   mutate(
-    month = factor(
-      month,
-      levels = c(1, 7),
-      labels = c("January", "July")
+    month = case_when(
+      month == 1 ~ "January",
+      month == 7 ~ "July"
     )
   )
+
 
 monthly_tmax_df |>
   ggplot(aes(x = year, y = mean_tmax)) +
@@ -99,6 +101,44 @@ monthly_tmax_df |>
 
 2. Some station-year averages are extreme, including approximately -13.4°C in January and 33.6°C in July. These values should be examined alongside the number of recorded days.
 
+
+## Temperature and Snowfall Distributions
+
+```{r}
+ggp_temp =
+  ny_noaa_clean |>
+  drop_na(tmax, tmin) |>
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_bin2d(bins = 50) +
+  labs(
+    title = "Maximum vs Minimum Temperature",
+    x = "Minimum temperature (C)",
+    y = "Maximum temperature (C)",
+    fill = "Count"
+  ) +
+  theme_minimal()
+
+ggp_snow =
+  ny_noaa_clean |>
+  filter(snow > 0, snow < 100) |>
+  ggplot(aes(x = factor(year), y = snow)) +
+  geom_violin(fill = "blue", alpha = .7) +
+  scale_x_discrete(
+    breaks = c("1981", "1985", "1990", "1995", "2000", "2005", "2010")
+  ) +
+  labs(
+    title = "Positive Snowfall Distribution by Year",
+    x = "Year",
+    y = "Snowfall (cm)"
+  ) +
+  theme_minimal()
+
+ggp_temp / ggp_snow
+```
+
+1. Maximum and minimum temperatures are strongly positively associated. However, 1,183 complete observations have `tmax < tmin`, suggesting possible data inconsistencies.
+
+2. Positive snowfall distributions are right-skewed across years, with most observations concentrated at smaller amounts.
 
 
 
