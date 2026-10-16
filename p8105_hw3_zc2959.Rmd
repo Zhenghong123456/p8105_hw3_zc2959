@@ -149,8 +149,74 @@ ggp_temp / ggp_snow
 
 # Problem 2
 
+## Data Cleaning
+
+```{r}
+nhanes_covar_df =
+  readxl::read_excel(
+    "./data/nhanes_covar.xlsx",
+    skip = 4,
+    na = c("", "NA")
+  ) |>
+  janitor::clean_names()
+
+nhanes_accel_df =
+  readxl::read_excel("./data/nhanes_accel.xlsx") |>
+  janitor::clean_names()
+```
+
+```{r}
+nhanes_covar_df =
+  nhanes_covar_df |>
+  filter(age >= 21) |>
+  drop_na(sex, age, bmi, education) |>
+  mutate(
+    sex = case_when(
+      sex == 1 ~ "Male",
+      sex == 2 ~ "Female"
+    ),
+    education = case_when(
+      education == 1 ~ "Less than high school",
+      education == 2 ~ "High school equivalent",
+      education == 3 ~ "More than high school"
+    ),
+    sex = factor(
+      sex,
+      levels = c("Male", "Female")
+    ),
+    education = factor(
+      education,
+      levels = c(
+        "Less than high school",
+        "High school equivalent",
+        "More than high school"
+      )
+    )
+  )
+```
+
+```{r}
+nhanes_accel_tidy =
+  nhanes_accel_df |>
+  pivot_longer(
+    min1:min1440,
+    names_to = "minute",
+    names_prefix = "min",
+    values_to = "mims"
+  )
+
+nhanes_df =
+  left_join(
+    nhanes_covar_df,
+    nhanes_accel_tidy,
+    by = "seqn"
+  )
+```
 
 
+1. Participants younger than 21 or with missing demographic data were excluded. Sex and education were converted to ordered categorical variables.
+
+2. The final tidy dataset contains 228 participants and 328,320 minute-level observations, retaining participant demographics and MIMS measurements.
 
 
 
