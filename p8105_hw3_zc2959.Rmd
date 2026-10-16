@@ -280,6 +280,47 @@ nhanes_total_df |>
 2. The fitted lines show a decrease in total activity with age across all three education groups. Activity levels vary considerably, with no consistent difference between men and women across education groups.
 
 
+## 24-Hour Activity Patterns
+
+```{r}
+nhanes_time_df =
+  nhanes_df |>
+  group_by(seqn) |>
+  mutate(
+    minute = min_rank(
+      factor(minute, levels = str_c(1:1440))
+    )
+  ) |>
+  ungroup() |>
+  mutate(
+    hour = (minute - 1) / 60
+  ) |>
+  group_by(education, sex, hour) |>
+  summarize(
+    mean_mims = mean(mims)
+  ) |>
+  ungroup()
+
+nhanes_time_df |>
+  ggplot(aes(x = hour, y = mean_mims, color = sex)) +
+  geom_line() +
+  facet_grid(. ~ education) +
+  scale_x_continuous(
+    breaks = c(0, 6, 12, 18, 24)
+  ) +
+  labs(
+    title = "24-Hour Activity Patterns by Sex and Education",
+    x = "Hour of Day",
+    y = "Mean MIMS per Minute",
+    color = "Sex"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+1. Activity levels are lowest overnight and increase during the morning. They remain relatively high during the day before decreasing in the evening.
+
+2. Men and women show similar daily patterns across education groups, although their average activity levels differ somewhat.
 
 
 
