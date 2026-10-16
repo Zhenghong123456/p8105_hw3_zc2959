@@ -436,6 +436,7 @@ Pier 61 at Chelsea Piers was the most popular starting station in July 2024, wit
 
 ## Median Ride Duration by Weekday, Month, and Year
 
+
 ```{r}
 citi_median_df =
   citi_df |>
@@ -443,7 +444,25 @@ citi_median_df =
   summarize(
     median_duration = median(duration)
   ) |>
-  ungroup()
+  ungroup() |>
+  mutate(
+    weekdays = case_when(
+      weekdays == "Monday" ~ "Mon",
+      weekdays == "Tuesday" ~ "Tue",
+      weekdays == "Wednesday" ~ "Wed",
+      weekdays == "Thursday" ~ "Thu",
+      weekdays == "Friday" ~ "Fri",
+      weekdays == "Saturday" ~ "Sat",
+      weekdays == "Sunday" ~ "Sun"
+    ),
+    weekdays = factor(
+      weekdays,
+      levels = c(
+        "Mon", "Tue", "Wed", "Thu",
+        "Fri", "Sat", "Sun"
+      )
+    )
+  )
 
 citi_median_df |>
   ggplot(aes(x = weekdays, y = median_duration)) +
@@ -457,6 +476,7 @@ citi_median_df |>
   ) +
   theme_minimal()
 ```
+
 
 1. Median ride durations are longer in July than in January for both years. Rides are also generally longer in 2020 than in 2024.
 
