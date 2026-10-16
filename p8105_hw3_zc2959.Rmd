@@ -419,6 +419,19 @@ citi_df |>
 2. Ride counts are higher in July than in January for both years. Both membership groups also have more rides in 2024 than in the corresponding months of 2020.
 
 
+## Top 5 Starting Stations in July 2024
+
+```{r citi-top-stations}
+citi_df |>
+  filter(year == 2024, month == "July") |>
+  drop_na(start_station_name) |>
+  count(start_station_name, name = "n_rides") |>
+  arrange(-n_rides) |>
+  head(5) |>
+  knitr::kable()
+```
+
+Pier 61 at Chelsea Piers was the most popular starting station in July 2024, with 163 rides in the sample.
 
 
 
