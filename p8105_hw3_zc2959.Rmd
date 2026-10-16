@@ -205,17 +205,29 @@ nhanes_accel_tidy =
     values_to = "mims"
   )
 
+
 nhanes_df =
   left_join(
     nhanes_covar_df,
     nhanes_accel_tidy,
     by = "seqn"
+  ) |>
+  group_by(seqn) |>
+  mutate(
+    minute = min_rank(
+      factor(minute, levels = str_c(1:1440))
+    )
+  ) |>
+  ungroup() |>
+  mutate(
+    seqn = factor(seqn)
   )
 ```
 
-1. Participants younger than 21 or with missing demographic data were excluded. Sex and education were converted to ordered categorical variables.
+1. Participants younger than 21 or with missing demographic data were excluded. Sex and education were converted to factors.
 
-2. The final tidy dataset contains 228 participants and 328,320 minute-level observations, retaining participant demographics and MIMS measurements.
+2. The cleaned dataset contains 228 participants and 328,320 minute-level observations.
+
 
 
 ## Demographic Summary
@@ -285,13 +297,6 @@ nhanes_total_df |>
 ```{r}
 nhanes_time_df =
   nhanes_df |>
-  group_by(seqn) |>
-  mutate(
-    minute = min_rank(
-      factor(minute, levels = str_c(1:1440))
-    )
-  ) |>
-  ungroup() |>
   mutate(
     hour = (minute - 1) / 60
   ) |>
@@ -300,6 +305,7 @@ nhanes_time_df =
     mean_mims = mean(mims)
   ) |>
   ungroup()
+
 
 nhanes_time_df |>
   ggplot(aes(x = hour, y = mean_mims, color = sex)) +
@@ -330,7 +336,70 @@ nhanes_time_df |>
 
 # Problem 3
 
+## Data Cleaning
 
+```{r}
+citi_jan_2020 =
+  read_csv("./data/Jan 2020 Citi.csv") |>
+  mutate(
+    year = 2020,
+    month = "January"
+  )
+
+citi_july_2020 =
+  read_csv("./data/July 2020 Citi.csv") |>
+  mutate(
+    year = 2020,
+    month = "July"
+  )
+
+citi_jan_2024 =
+  read_csv("./data/Jan 2024 Citi.csv") |>
+  mutate(
+    year = 2024,
+    month = "January"
+  )
+
+citi_july_2024 =
+  read_csv("./data/July 2024 Citi.csv") |>
+  mutate(
+    year = 2024,
+    month = "July"
+  )
+```
+
+```{r}
+citi_df =
+  bind_rows(
+    citi_jan_2020,
+    citi_july_2020,
+    citi_jan_2024,
+    citi_july_2024
+  ) |>
+  mutate(
+    month = factor(
+      month,
+      levels = c("January", "July")
+    ),
+    weekdays = factor(
+      weekdays,
+      levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday") ),
+    member_casual = factor(
+      member_casual,
+      levels = c("casual", "member")
+    ),
+    rideable_type = factor(
+      rideable_type,
+      levels = c("classic_bike", "electric_bike")
+    )
+  )
+```
+
+1. The combined dataset contains 99,485 rides from January and July of 2020 and 2024, with 9 variables describing ride information, duration, stations, membership status, and bike type.
+
+2. Each row represents one ride. Month, weekday, membership status, and bike type were converted to factors.
+
+3. Missing values occur only in station names, with 43 missing starting stations and 207 missing ending stations.
 
 
 
