@@ -219,6 +219,36 @@ nhanes_df =
 2. The final tidy dataset contains 228 participants and 328,320 minute-level observations, retaining participant demographics and MIMS measurements.
 
 
+## Demographic Summary
+
+```{r}
+nhanes_covar_df |>
+  count(education, sex) |>
+  pivot_wider(
+    names_from = sex,
+    values_from = n
+  ) |>
+  knitr::kable()
+```
+
+```{r}
+nhanes_covar_df |>
+  ggplot(aes(x = sex, y = age, fill = sex)) +
+  geom_boxplot() +
+  facet_grid(. ~ education) +
+  labs(
+    title = "Age Distribution by Sex and Education",
+    x = "Sex",
+    y = "Age (years)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+
+1. The sample includes 118 men and 110 women. The largest education group is "More than high school" (115 participants).
+
+2. The median ages are lower in the "More than high school" group (men: 43.5; women: 41 years) than in the "Less than high school" group (men: 60; women: 61 years).
 
 
 
